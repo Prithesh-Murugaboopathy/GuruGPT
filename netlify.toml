@@ -1,8 +1,8 @@
 [build]
-  # Specify the base directory if your site files are in a subdirectory
-  base = "frontend"  # Change this if your directory name is different
-  publish = "frontend/build"  # The directory that contains the built output
+  base = "."  # Use current directory
+  publish = "build"  # Assuming build folder is in root
   command = "npm install && npm run build"  # Command to build the React app
+
 
 [dev]
   command = "npm start"  # Command to run your React app locally

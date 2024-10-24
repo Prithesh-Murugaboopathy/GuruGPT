@@ -6,10 +6,8 @@
 .pnp.js
 
 # testing
-/coverage
-
-# production
-/build
+/coveragegit add build
+git commit -m "Include build folder in Git"
 
 # misc
 .DS_Store
