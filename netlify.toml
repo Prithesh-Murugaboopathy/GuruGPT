@@ -1,0 +1,26 @@
+[build]
+  # Specify the base directory if your site files are in a subdirectory
+  base = "frontend"  # Change this if your directory name is different
+  publish = "frontend/build"  # The directory that contains the built output
+  command = "npm install && npm run build"  # Command to build the React app
+
+[dev]
+  command = "npm start"  # Command to run your React app locally
+
+[build.environment]
+  # Any environment variables you want to set for the build
+  REACT_APP_API_URL = "https://flask-api-74jq.onrender.com/api/chat"  # Change this to your Flask API URL
+
+# Redirects configuration (if necessary)
+[[redirects]]
+  from = "/api/*"  # Redirect any API requests
+  to = "https://flask-api-74jq.onrender.com/api/:splat"  # Forward requests to your Flask API
+  status = 200
+  force = true
+
+# Custom headers (if needed)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Example to enable CORS
+    Access-Control-Allow-Origin = "*"
