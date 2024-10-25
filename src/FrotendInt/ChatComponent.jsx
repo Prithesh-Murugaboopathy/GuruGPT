@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const API_URL = "https://flask-api-74jq.onrender.com/api/chat"; // Update your API URL here
+const API_URL = "http://127.0.0.1:5000/api/chat"; // Update your API URL here
 
 const ChatComponent = () => {
   const [question, setQuestion] = useState("");
