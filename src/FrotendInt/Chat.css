@@ -1,0 +1,37 @@
+/* ChatComponent.css */
+
+.loading-dot {
+  width: 20px;
+  height: 20px;
+  background-color: black;
+  border-radius: 50%;
+  animation: fade 1s infinite alternate;
+}
+
+@keyframes fade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.blinking-block-cursor {
+  display: inline-block;
+  background-color: black;
+  width: 9px; /* Cursor width */
+  height: 21px; /* Cursor height */
+  animation: blink 0.5s step-end infinite;
+  margin-left: 2px; /* Space between text and cursor */
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
