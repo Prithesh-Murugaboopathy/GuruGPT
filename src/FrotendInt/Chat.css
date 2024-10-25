@@ -1,5 +1,3 @@
-/* ChatComponent.css */
-
 .loading-dot {
   width: 20px;
   height: 20px;
@@ -17,21 +15,38 @@
   }
 }
 
-.blinking-block-cursor {
-  display: inline-block;
-  background-color: black;
-  width: 9px; /* Cursor width */
-  height: 21px; /* Cursor height */
-  animation: blink 0.5s step-end infinite;
-  margin-left: 2px; /* Space between text and cursor */
+.response-container {
+  position: relative; /* Relative positioning for cursor alignment */
+  margin-top: 10px; /* Space between response title and response text */
+}
+
+.response-text {
+  margin: 0; /* Remove default margin */
+  padding-bottom: 5px; /* Space for the cursor */
+}
+
+.blinking-round-cursor {
+  position: absolute; /* Position the cursor relative to the container */
+  bottom: -5px; /* Align to the bottom of the text with margin */
+  background-color: black; /* Same color as loading dot */
+  width: 10px; /* Adjust width for round cursor */
+  height: 10px; /* Adjust height for round cursor */
+  border-radius: 50%; /* Round cursor */
+  opacity: 0; /* Start invisible */
+  animation: blink 1s infinite; /* Adjust blink speed */
+  transition: opacity 0.5s; /* Fade effect */
 }
 
 @keyframes blink {
   0%,
   100% {
-    opacity: 1;
+    opacity: 1; /* Visible at start and end */
   }
   50% {
-    opacity: 0;
+    opacity: 0.5; /* Invisible at halfway point */
   }
+}
+
+.error-message {
+  color: red; /* Change the color of the error message */
 }
