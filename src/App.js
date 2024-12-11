@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { auth, db } from "./firebaseConfig"; // Assuming firebaseConfig is set correctly
+import React, { useState, useEffect, useCallback } from "react";
+import { auth, db } from "./firebaseConfig";
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -23,25 +23,10 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); // State for search input
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      setLoading(false); // Set loading to false when authentication is completed
-
-      if (currentUser) {
-        await loadOrCreateChat(currentUser.uid);
-      } else {
-        setChats([]);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const loadOrCreateChat = async (userId) => {
+  const loadOrCreateChat = useCallback(async (userId) => {
     const chatsRef = collection(db, "users", userId, "chats");
     const snapshot = await getDocs(chatsRef);
     const chatsList = snapshot.docs.map((doc) => ({
@@ -58,19 +43,35 @@ const App = () => {
         setSelectedChat(chatsList[0].id);
       }
     } else {
-      await createNewChat(userId); // Automatically create a new chat if none exists
+      await createNewChat(userId);
     }
-  };
+  }, []); // Empty array means this callback function doesn't change unless a prop/state it depends on does.
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+
+      if (currentUser) {
+        await loadOrCreateChat(currentUser.uid);
+      } else {
+        setChats([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [loadOrCreateChat]); // Add loadOrCreateChat to the dependency array
 
   const createNewChat = async (userId) => {
     const newChat = {
-      id: `local-${Date.now()}`, // Temporary ID for new chat
+      id: `local-${Date.now()}`,
       title: "New Chat",
       messages: [],
     };
     setChats((prevChats) => [...prevChats, newChat]);
     setSelectedChat(newChat.id);
   };
+
   const handleCreateNewChat = async () => {
     const newChatExists = chats.some((chat) => chat.title === "New Chat");
 
@@ -89,14 +90,12 @@ const App = () => {
       await deleteDoc(chatRef);
     }
 
-    // Remove the chat from the state
     setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
 
-    // If no chats left, create a new one
     if (chats.length <= 1) {
       await createNewChat(user.uid);
     } else {
-      setSelectedChat(chats[0]?.id || null); // Select the first available chat
+      setSelectedChat(chats[0]?.id || null);
     }
   };
 
@@ -124,7 +123,6 @@ const App = () => {
   const handleChatSelect = async (chatId) => {
     if (chatId !== selectedChat) {
       setSelectedChat(chatId);
-      // If a chat other than "New Chat" is selected, delete the "New Chat"
       if (selectedChat && selectedChat !== "local-" && chatId !== "local-") {
         const newChat = chats.find((chat) => chat.title === "New Chat");
         if (newChat) {
@@ -135,11 +133,11 @@ const App = () => {
   };
 
   const filteredChats = chats
-    .filter((chat) => chat.title !== "New Chat") // Exclude 'New Chat'
+    .filter((chat) => chat.title !== "New Chat")
     .filter((chat) =>
       chat.title.toLowerCase().includes(searchQuery.toLowerCase())
     )
-    .reverse(); // Reverse the order to show latest first
+    .reverse();
 
   if (loading) {
     return (
@@ -149,10 +147,9 @@ const App = () => {
           &nbsp; GuruGPT
         </div>
       </div>
-    ); // Show a loading message until the user data is ready
+    );
   }
 
-  // Authentication methods (Google, Apple, Email, Microsoft)
   const googleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
@@ -171,6 +168,7 @@ const App = () => {
       console.error("Error signing out:", error.message);
     }
   };
+
   return (
     <div className="main_app">
       {!user ? (
@@ -189,10 +187,9 @@ const App = () => {
             onDeleteChat={deleteChat}
             selectedChatId={selectedChat}
             onNewChatSelect={handleChatSelect}
-            user={user} // Pass user to Sidebar
+            user={user}
             signOutUser={signOutUser}
           />
-
           <ChatComponent
             selectedChat={selectedChat}
             chats={chats}
@@ -200,7 +197,7 @@ const App = () => {
             onDeleteChat={deleteChat}
             userId={user.uid}
             selectedChatId={selectedChat}
-            onNewChatSelect={handleChatSelect} // Pass updated chat select handler
+            onNewChatSelect={handleChatSelect}
             onCreateNewChat={handleCreateNewChat}
             user={user}
           />
