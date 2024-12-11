@@ -4,5 +4,51 @@
 }
 
 * {
-  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  font-family: sans-serif;
+  transition-duration: 350ms;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f7f8fa;
+}
+.main_app {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 300px;
+  border-right: 1px solid #ccc;
+  padding: 20px;
+}
+
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-search {
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.chat-list {
+  margin-top: 20px;
+}
+
+.chat-item {
+  padding: 10px;
+}
+.sub_app {
+  display: flex !important;
+  justify-content: space-between;
+  width: 100vw;
+}
+
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
 }

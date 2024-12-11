@@ -1,35 +1,43 @@
-import React, { useEffect, useState } from "react";
-import { auth, db } from "./firebaseConfig";
-import { onAuthStateChanged } from "firebase/auth";
+import React, { useState, useEffect } from "react";
+import { auth, db } from "./firebaseConfig"; // Assuming firebaseConfig is set correctly
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+} from "firebase/auth";
 import {
   collection,
   getDocs,
   addDoc,
   deleteDoc,
   doc,
-  updateDoc, // Add this line
+  updateDoc,
 } from "firebase/firestore";
-
-import Login from "./Login";
-import SignUpComponent from "./SignUp";
-import Header from "./FrotendInt/Header/Header";
+import Sidebar from "./Sidebar";
 import ChatComponent from "./FrotendInt/ChatComponent/ChatComponent";
 import "./App.css";
+import { BlurOnRounded } from "@mui/icons-material";
 
 const App = () => {
   const [user, setUser] = useState(null);
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(""); // State for search input
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      setLoading(false); // Set loading to false when authentication is completed
+
       if (currentUser) {
         await loadOrCreateChat(currentUser.uid);
       } else {
         setChats([]);
       }
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -43,7 +51,12 @@ const App = () => {
 
     if (chatsList.length > 0) {
       setChats(chatsList);
-      setSelectedChat(chatsList[0].id);
+      const savedChatId = localStorage.getItem("selectedChatId");
+      if (savedChatId) {
+        setSelectedChat(savedChatId);
+      } else {
+        setSelectedChat(chatsList[0].id);
+      }
     } else {
       await createNewChat(userId); // Automatically create a new chat if none exists
     }
@@ -58,7 +71,6 @@ const App = () => {
     setChats((prevChats) => [...prevChats, newChat]);
     setSelectedChat(newChat.id);
   };
-
   const handleCreateNewChat = async () => {
     const newChatExists = chats.some((chat) => chat.title === "New Chat");
 
@@ -80,13 +92,11 @@ const App = () => {
     // Remove the chat from the state
     setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
 
-    // Check if there are any chats left
+    // If no chats left, create a new one
     if (chats.length <= 1) {
-      // No chats left after deletion, create a new chat
       await createNewChat(user.uid);
     } else {
-      // Select the first available chat
-      setSelectedChat(chats[0]?.id || null);
+      setSelectedChat(chats[0]?.id || null); // Select the first available chat
     }
   };
 
@@ -111,25 +121,88 @@ const App = () => {
     }
   };
 
+  const handleChatSelect = async (chatId) => {
+    if (chatId !== selectedChat) {
+      setSelectedChat(chatId);
+      // If a chat other than "New Chat" is selected, delete the "New Chat"
+      if (selectedChat && selectedChat !== "local-" && chatId !== "local-") {
+        const newChat = chats.find((chat) => chat.title === "New Chat");
+        if (newChat) {
+          await deleteChat(newChat.id);
+        }
+      }
+    }
+  };
+
+  const filteredChats = chats
+    .filter((chat) => chat.title !== "New Chat") // Exclude 'New Chat'
+    .filter((chat) =>
+      chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .reverse(); // Reverse the order to show latest first
+
+  if (loading) {
+    return (
+      <div>
+        <div className="brand" style={{ textAlign: "center", width: "100vw" }}>
+          <BlurOnRounded className="Logo" />
+          &nbsp; GuruGPT
+        </div>
+      </div>
+    ); // Show a loading message until the user data is ready
+  }
+
+  // Authentication methods (Google, Apple, Email, Microsoft)
+  const googleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      setUser(result.user);
+    } catch (error) {
+      console.error("Error signing in with Google:", error.message);
+    }
+  };
+
+  const signOutUser = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error("Error signing out:", error.message);
+    }
+  };
   return (
     <div className="main_app">
       {!user ? (
         <div>
-          <Login />
-          <SignUpComponent />
+          <button onClick={googleSignIn}>Sign In with Google</button>
         </div>
       ) : (
-        <div>
-          <Header />
-          <ChatComponent
-            userId={user.uid}
-            chats={chats}
-            selectedChatId={selectedChat}
-            onNewChatSelect={setSelectedChat}
+        <div className="sub_app">
+          <Sidebar
+            chats={filteredChats}
+            onChatSelect={handleChatSelect}
             onCreateNewChat={handleCreateNewChat}
+            searchQuery={searchQuery}
+            onSearchChange={(e) => setSearchQuery(e.target.value)}
+            onSearch={(query) => setSearchQuery(query)}
             onDeleteChat={deleteChat}
-            className="ChatComponent"
+            selectedChatId={selectedChat}
+            onNewChatSelect={handleChatSelect}
+            user={user} // Pass user to Sidebar
+            signOutUser={signOutUser}
+          />
+
+          <ChatComponent
+            selectedChat={selectedChat}
+            chats={chats}
             onSaveChat={saveChatToDb}
+            onDeleteChat={deleteChat}
+            userId={user.uid}
+            selectedChatId={selectedChat}
+            onNewChatSelect={handleChatSelect} // Pass updated chat select handler
+            onCreateNewChat={handleCreateNewChat}
+            user={user}
           />
         </div>
       )}
