@@ -1,15 +1,16 @@
 [build]
   base = "."  # Use current directory
   publish = "build"  # Assuming build folder is in root
-  command = "npm install && npm run build"  # Command to build the React app
-
+  command = "npm install --no-cache && npm run build"  # Command to install dependencies and build the React app
 
 [dev]
   command = "npm start"  # Command to run your React app locally
 
 [build.environment]
-  # Any environment variables you want to set for the build
+  # Set environment variables needed for the build
   REACT_APP_API_URL = "https://flask-api-74jq.onrender.com/api/chat"  # Change this to your Flask API URL
+  NODE_ENV = "production"  # Ensure production mode is set
+  NODE_VERSION = "16"  # Optional: specify Node.js version, update as needed
 
 # Redirects configuration (if necessary)
 [[redirects]]
